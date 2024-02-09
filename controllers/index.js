@@ -1,4 +1,33 @@
 const { loginService, signupService } = require("../services");
+const jwt = require("jsonwebtoken");
+
+const verifyToken = async(req , res , next)=>{
+        const secretkey='my_secret_key';
+        const token = req.cookies.sessionToken;
+        console.log("token" , token);
+        if(!token){
+            res.send("user logged out");
+        }
+
+        jwt.verify(token, secretkey, (err, payload) => {
+            if (err) {
+                // Token not verified
+                console.error("JWT verification error:", err);
+                return res.status(403).send("Token verification failed");
+            }
+    
+            if (!payload) {
+                // Invalid token
+                return res.status(401).send("User not authenticated");
+            }
+    
+            console.log("Payload:", payload);
+            req.email= payload.email; 
+            req.password=payload.password;
+            // next();
+            
+        });
+};
 
 // Login Controller
 const loginController = async (req, res) => {
@@ -34,6 +63,12 @@ const loginController = async (req, res) => {
 
             // for login
             else {
+                // Cookie and token
+                const secretKey = "my_secret_key";
+                const token = jwt.sign(loginData , secretKey , {expiresIn : '5s'});
+                console.log('JWT TOKEN:', token);
+                res.cookie('sessionToken', token, {httpOnly : true});
+
                 res.send({
                     status: 1,
                     success: true,
@@ -148,4 +183,4 @@ const signUpController = async (req, res) => {
     }
 }
 
-module.exports = { loginController, signUpController };
+module.exports = { verifyToken, loginController, signUpController };
