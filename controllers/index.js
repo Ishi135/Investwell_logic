@@ -1,5 +1,8 @@
 const { loginService, signupService } = require("../services");
 const jwt = require("jsonwebtoken");
+const fs = require('fs');
+const folderPath = "/home/ishita/Documents/INVESTWELL/Project1/frontend/public/pdf";
+const pdfPath = '/home/ishita/Documents/INVESTWELL/Project1/frontend/public/pdf/c4611_sample_explain.pdf';
 
 const verifyToken = async(req , res , next)=>{
         const secretkey='my_secret_key';
@@ -29,8 +32,9 @@ const verifyToken = async(req , res , next)=>{
         });
 };
 
-// Login Controller
+
 const loginController = async (req, res) => {
+    debugger
     try {
         const { email, password } = req.body;
         const emailRegex = /^[^\d][a-zA-Z\d._-]*[a-zA-Z][a-zA-Z\d._-]*@([a-zA-Z\d.-]+\.[a-zA-Z]{2,})$/;
@@ -56,16 +60,17 @@ const loginController = async (req, res) => {
 
         else {
             const loginData = {email, password};
-            const result = await loginService(loginData); 
+            const result = await loginService(loginData); // Calling login services
+
             if (result && result.length == 0) {
                 throw new Error("Wrong Email")
             }
 
-            // for login
+            // For successfull login
             else {
                 // Cookie and token
                 const secretKey = "my_secret_key";
-                const token = jwt.sign(loginData , secretKey , {expiresIn : '5s'});
+                const token = jwt.sign(loginData , secretKey , {expiresIn : '30s'});
                 console.log('JWT TOKEN:', token);
                 res.cookie('sessionToken', token, {httpOnly : true});
 
@@ -106,20 +111,21 @@ const loginController = async (req, res) => {
         });
     }
 }
-};
+}; 
 
-// Singup Controller
+
 const signUpController = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { Path, email, password } = req.body;
         const emailRegex = /^[^\d][a-zA-Z\d._-]*[a-zA-Z][a-zA-Z\d._-]*@([a-zA-Z\d.-]+\.[a-zA-Z]{2,})$/;
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@])[a-zA-Z\d@]+$/;
 
-        if (!name || !email || !password) {
+        // checking whether data is received or not 
+        if (!Path || !email || !password) {
             return res.send({
                 status: 0,
                 sucess: false,
-                message: "Please enter name, email or password",
+                message: "Please enter Path, email or password",
                 result: {}
             })
         }
@@ -152,8 +158,9 @@ const signUpController = async (req, res) => {
         }
 
         else {
-            const signupData = { name, email, password };
-            const result = await signupService(signupData); 
+            const signupData = { Path, email, password };
+            const result = await signupService(signupData);
+
             if (result && result.length > 0) {
                 return res.send({
                     status: 0,
@@ -163,6 +170,7 @@ const signUpController = async (req, res) => {
                 });
             }
 
+            // For successful register
             else {
                 return res.send({
                     status: 1,
@@ -183,4 +191,49 @@ const signUpController = async (req, res) => {
     }
 }
 
-module.exports = { verifyToken, loginController, signUpController };
+const policyDocsController = async (req, res) => {
+    try {
+        const policies = await fs.promises.readdir(folderPath);
+        
+        const policyData = policies.map((policy, index) => ({
+            id: index + 1,
+            name: policy
+        }));
+
+        return res.send({
+            success: true,
+            status: 1,
+            message: "Successfully get PolicyDocs Data",
+            policyData
+        });
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            status: 0,
+            message: "Error in Policy Docs Controller"
+        });
+    }
+};
+
+const getPolicyController  = async(req,res) =>{
+    try{
+        return res.send({
+            success: true,
+            status: 1,
+            message: "This is Pdf path",
+            result : pdfPath
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            status: 0,
+            message: "Error in Get Policy Controller"
+        });
+    }
+    
+}
+
+module.exports = { verifyToken, loginController, signUpController, policyDocsController, getPolicyController};
