@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const fs = require('fs');
 const folderPath = "/home/ishita/Documents/INVESTWELL/Project1/frontend/public/pdf";
 const pdfPath = '/home/ishita/Documents/INVESTWELL/Project1/frontend/public/pdf/c4611_sample_explain.pdf';
+const path = require('path');
 
 const verifyToken = async(req , res , next)=>{
         const secretkey='my_secret_key';
@@ -31,7 +32,6 @@ const verifyToken = async(req , res , next)=>{
             
         });
 };
-
 
 const loginController = async (req, res) => {
     debugger
@@ -112,7 +112,6 @@ const loginController = async (req, res) => {
     }
 }
 }; 
-
 
 const signUpController = async (req, res) => {
     try {
@@ -216,24 +215,13 @@ const policyDocsController = async (req, res) => {
     }
 };
 
-const getPolicyController  = async(req,res) =>{
-    try{
-        return res.send({
-            success: true,
-            status: 1,
-            message: "This is Pdf path",
-            result : pdfPath
-        });
+const getPolicyController = (req, res) => {
+    try {
+      res.sendFile(path.resolve(pdfPath));
+    } catch (err) {
+      console.error(err);
+      res.json({ error: 'Server error' });
     }
-    catch (error) {
-        console.log(error);
-        return res.send({
-            success: false,
-            status: 0,
-            message: "Error in Get Policy Controller"
-        });
-    }
-    
-}
+};
 
 module.exports = { verifyToken, loginController, signUpController, policyDocsController, getPolicyController};
